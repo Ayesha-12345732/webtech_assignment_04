@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Markdown Slides</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
+<style>
+:root{--bg:#f4f5f7;--panel:#fff;--text:#1d2330;--muted:#6b7385;--line:#d9dde5;--accent:#3b5bdb;--accent-t:#fff;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14161b;--panel:#1d2027;--text:#e8eaf0;--muted:#98a0b3;--line:#2e333d;--accent:#748ffc;--accent-t:#10131a;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#14161b;--panel:#1d2027;--text:#e8eaf0;--muted:#98a0b3;--line:#2e333d;--accent:#748ffc;--accent-t:#10131a;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--text);font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+#app{height:100%;display:flex;flex-direction:column}
+header{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:10px 14px;background:var(--panel);border-bottom:1px solid var(--line)}
+header h1{font-size:16px;margin:0 8px 0 0}
+button,select,input{font:inherit;color:var(--text);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px 12px}
+button{cursor:pointer}
+button:hover:not(:disabled){border-color:var(--accent)}
+button:disabled{opacity:.4;cursor:not-allowed}
+button.primary{background:var(--accent);color:var(--accent-t);border-color:var(--accent)}
+#status{color:var(--muted);font-size:13px;margin-left:auto}
+main{flex:1;min-height:0;display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px}
+@media (max-width:760px){main{grid-template-columns:1fr;grid-template-rows:1fr 1fr}}
+section{display:flex;flex-direction:column;min-height:0;background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.label{padding:8px 12px;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);border-bottom:1px solid var(--line)}
+textarea{flex:1;resize:none;border:0;border-radius:0;padding:14px;font:14px/1.5 ui-monospace,Menlo,Consolas,monospace;outline:none;width:100%}
+.stage{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:12px;background:var(--bg)}
+.box{aspect-ratio:16/9;width:100%;max-height:100%;max-width:calc((100vh) * 16 / 9);container-type:inline-size;background:#fff;color:#1d2330;border-radius:6px;box-shadow:0 2px 14px rgba(0,0,0,.18);overflow:hidden}
+.slide{width:100%;height:100%;padding:5cqw 6cqw;font-size:2.1cqw;line-height:1.45;overflow:auto;display:flex;flex-direction:column;justify-content:center}
+.slide h1{font-size:4.6cqw;margin:0 0 .5em;line-height:1.15;color:#2b3f9e}
+.slide h2{font-size:3cqw;margin:.2em 0 .5em;color:#3b5bdb}
+.slide h3{font-size:2.4cqw;margin:.2em 0 .4em}
+.slide p,.slide ul,.slide ol{margin:.4em 0}
+.slide li{margin:.2em 0}
+.slide code{background:#eceef4;padding:.1em .35em;border-radius:4px;font-size:.9em}
+.slide pre{background:#1d2330;color:#eef;padding:1em;border-radius:8px;overflow:auto}
+.slide pre code{background:none;padding:0}
+.slide blockquote{margin:.6em 0;padding-left:1em;border-left:.3cqw solid #3b5bdb;color:#555}
+.slide img{max-width:100%;max-height:50%}
+.slide table{border-collapse:collapse}.slide td,.slide th{border:1px solid #ccd;padding:.3em .7em}
+.controls{display:flex;align-items:center;justify-content:center;gap:10px;padding:8px;border-top:1px solid var(--line)}
+.count{min-width:70px;text-align:center;color:var(--muted);font-variant-numeric:tabular-nums}
+#present{position:fixed;inset:0;z-index:50;background:#0d0f14;display:none;flex-direction:column;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+#present.on{display:flex}
+#present .stage{background:#0d0f14;padding:0}
+#present .box{border-radius:0;box-shadow:none;max-width:calc(100vh * 16 / 9)}
+#present .controls{border-color:#2a2e38;background:#0d0f14}
+#present .count{color:#aab}
+#present button{background:#1d2027;color:#e8eaf0;border-color:#343a47}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>Markdown Slides</h1>
+    <select id="deckSel" aria-label="Presentation"></select>
+    <input id="name" placeholder="Presentation name" aria-label="Presentation name">
+    <button id="newBtn">New</button>
+    <button id="delBtn">Delete</button>
+    <button id="saveBtn" class="primary">Save (Ctrl+S)</button>
+    <button id="presentBtn">Present</button>
+    <span id="status"></span>
+  </header>
+  <main>
+    <section>
+      <div class="label">Markdown — separate slides with ---</div>
+      <textarea id="editor" spellcheck="false"></textarea>
+    </section>
+    <section>
+      <div class="label">Live preview</div>
+      <div class="stage"><div class="box"><div class="slide" id="pv"></div></div></div>
+      <div class="controls">
+        <button id="pPrev">◀ Left</button>
+        <span class="count" id="pCount"></span>
+        <button id="pNext">Right ▶</button>
+        <button id="pFs"></button>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div id="present">
+  <div class="stage"><div class="box"><div class="slide" id="ps"></div></div></div>
+  <div class="controls">
+    <button id="sPrev">◀ Left</button>
+    <span class="count" id="sCount"></span>
+    <button id="sNext">Right ▶</button>
+    <button id="sFs"></button>
+  </div>
+</div>
+
+<script>
+const KEY = "md-slides-v1";
+const $ = id => document.getElementById(id);
+const TEMPLATE = [
+  "# Welcome", "## Your first slide", "Write Markdown on the left.", "Use **bold**, *italic* and `code`.", "",
+  "---", "",
+  "# Slide 2", "## Lists work too", "- Create slides", "- Edit slides", "- Save slides", "- Present slides", "",
+  "---", "",
+  "# Slide 3", "## Thank you", "> Press → and ← to move, F11 for full screen."
+].join("\n");
+
+let state = { decks: [], current: null };
+let idx = 0, presenting = false, dirty = false;
+
+function load() {
+  try { const raw = localStorage.getItem(KEY); if (raw) state = JSON.parse(raw); } catch (e) {}
+  if (!state.decks || !state.decks.length) {
+    state = { decks: [mkDeck("Untitled presentation")], current: null };
+  }
+  if (!state.decks.find(d => d.id === state.current)) state.current = state.decks[0].id;
+}
+function mkDeck(name) { return { id: "d" + Date.now() + Math.floor(Math.random() * 1000), name, md: TEMPLATE }; }
+function deck() { return state.decks.find(d => d.id === state.current); }
+function persist() {
+  try { localStorage.setItem(KEY, JSON.stringify(state)); return true; } catch (e) { return false; }
+}
+function setStatus(t) { $("status").textContent = t; }
+
+function slides() {
+  const parts = $("editor").value.split(/^[ \t]*---[ \t]*$/m).map(s => s.trim());
+  while (parts.length > 1 && parts[parts.length - 1] === "") parts.pop();
+  return parts.length ? parts : [""];
+}
+function render() {
+  const s = slides();
+  if (idx > s.length - 1) idx = s.length - 1;
+  if (idx < 0) idx = 0;
+  const html = window.marked ? marked.parse(s[idx] || "") : s[idx];
+  $("pv").innerHTML = html; $("ps").innerHTML = html;
+  const c = (idx + 1) + " / " + s.length;
+  $("pCount").textContent = c; $("sCount").textContent = c;
+  const first = idx === 0, last = idx === s.length - 1;
+  ["pPrev", "sPrev"].forEach(i => $(i).disabled = first);
+  ["pNext", "sNext"].forEach(i => $(i).disabled = last);
+  const fs = presenting ? "✕ Exit full screen" : "⛶ Full screen";
+  $("pFs").textContent = fs; $("sFs").textContent = fs;
+}
+function go(d) { idx += d; render(); }
+
+function refreshDecks() {
+  const sel = $("deckSel"); sel.innerHTML = "";
+  state.decks.forEach(d => { const o = document.createElement("option"); o.value = d.id; o.textContent = d.name || "Untitled"; sel.appendChild(o); });
+  sel.value = state.current;
+}
+function openDeck() {
+  const d = deck();
+  $("editor").value = d.md; $("name").value = d.name; idx = 0; dirty = false; refreshDecks(); render();
+}
+function save() {
+  const d = deck();
+  d.md = $("editor").value; d.name = $("name").value.trim() || "Untitled presentation";
+  refreshDecks();
+  const ok = persist();
+  dirty = false;
+  setStatus(ok ? "Saved ✓" : "Could not save (browser storage unavailable)");
+}
+
+async function togglePresent() {
+  if (!presenting) {
+    presenting = true; $("present").classList.add("on");
+    try { await $("present").requestFullscreen(); } catch (e) {}
+  } else {
+    presenting = false; $("present").classList.remove("on");
+    try { if (document.fullscreenElement) await document.exitFullscreen(); } catch (e) {}
+  }
+  render();
+}
+document.addEventListener("fullscreenchange", () => {
+  if (!document.fullscreenElement && presenting) { presenting = false; $("present").classList.remove("on"); render(); }
+});
+
+$("editor").addEventListener("input", () => { dirty = true; setStatus("Unsaved changes"); render(); });
+$("name").addEventListener("input", () => { dirty = true; setStatus("Unsaved changes"); });
+$("deckSel").addEventListener("change", e => { state.current = e.target.value; persist(); openDeck(); setStatus(""); });
+$("newBtn").addEventListener("click", () => {
+  const d = mkDeck("Untitled presentation"); state.decks.push(d); state.current = d.id; persist(); openDeck(); setStatus("New presentation created");
+});
+$("delBtn").addEventListener("click", () => {
+  if (!confirm("Delete this presentation?")) return;
+  state.decks = state.decks.filter(d => d.id !== state.current);
+  if (!state.decks.length) state.decks.push(mkDeck("Untitled presentation"));
+  state.current = state.decks[0].id; persist(); openDeck(); setStatus("Deleted");
+});
+$("saveBtn").addEventListener("click", save);
+$("presentBtn").addEventListener("click", togglePresent);
+["pPrev", "sPrev"].forEach(i => $(i).addEventListener("click", () => go(-1)));
+["pNext", "sNext"].forEach(i => $(i).addEventListener("click", () => go(1)));
+["pFs", "sFs"].forEach(i => $(i).addEventListener("click", togglePresent));
+
+document.addEventListener("keydown", e => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") { e.preventDefault(); save(); return; }
+  if (e.key === "F11") { e.preventDefault(); togglePresent(); return; }
+  const typing = ["TEXTAREA", "INPUT", "SELECT"].includes(document.activeElement.tagName);
+  if (typing && !presenting) return;
+  if (e.key === "ArrowRight") { e.preventDefault(); go(1); }
+  else if (e.key === "ArrowLeft") { e.preventDefault(); go(-1); }
+});
+window.addEventListener("beforeunload", e => { if (dirty) { e.preventDefault(); e.returnValue = ""; } });
+
+load(); openDeck();
+</script>
+</body>
+</html>
